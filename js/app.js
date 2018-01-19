@@ -67,11 +67,11 @@ function initView(){
 		this.filterLocations = function(){
 			//search all titles matching what is written in the filter input
 			self.filteredPoints(ko.utils.arrayFilter(this.points(), function(point) {
-				return self.filterText() == undefined || point.title.toLowerCase().indexOf(self.filterText().toLowerCase()) !== -1;
+				return self.filterText() === undefined || point.title.toLowerCase().indexOf(self.filterText().toLowerCase()) !== -1;
 			}));
 			//display the markers on the map
 			this.displayMarkers();
-		}		
+		};		
 		
 		//displays the markers on the map
 		this.displayMarkers = function(){
@@ -82,9 +82,9 @@ function initView(){
 			
 			var bounds = new google.maps.LatLngBounds();
 			//iterate the list of filtered points and make them visible
-			for (var i = 0; i < this.filteredPoints().length; i++) {		
-				this.filteredPoints()[i].marker.setMap(this.map);
-				bounds.extend(this.filteredPoints()[i].marker.position);
+			for (var j = 0; j < this.filteredPoints().length; j++) {		
+				this.filteredPoints()[j].marker.setMap(this.map);
+				bounds.extend(this.filteredPoints()[j].marker.position);
 			}
 			this.map.fitBounds(bounds);
 			
@@ -94,38 +94,43 @@ function initView(){
 		this.createMarkers = function(){
 			// The following group uses the location array to create an array of markers on initialize.
 			for (var i = 0; i < this.points().length; i++) {
-				// Get the position from the location array.
-				var position = this.points()[i].location;
-				var title = this.points()[i].title;
-				// Create a marker per location, and put into markers array.
-				var marker = new google.maps.Marker({
-					position: position,
-					title: title,
-					animation: google.maps.Animation.DROP,
-					icon: icon,
-					id: i,
-					map : this.map
-					});
-				
-				//add the marker to the Point
-				this.points()[i].marker = marker;
-				
-				// Create an onclick event to open the large infowindow at each marker.
-				marker.addListener('click', function() {
-					this.setIcon(iconBigSelected);
-					self.populateInfoWindow(this, self.largeInfowindow);
-				});
-
-				marker.addListener('mouseover', function() {
-					this.setIcon(iconBig);
-				});
-
-				marker.addListener('mouseout', function() {
-					this.setIcon(icon);
-				});
-				
+				this.createMarker(i);
 			}
 		}; // end createmarkers
+		
+		//Creates a single marker
+		this.createMarker = function(pos){
+			// Get the position from the location array.
+			var position = this.points()[pos].location;
+			var title = this.points()[pos].title;
+			// Create a marker per location, and put into markers array.
+			var marker = new google.maps.Marker({
+				position: position,
+				title: title,
+				animation: google.maps.Animation.DROP,
+				icon: icon,
+				id: pos,
+				map : this.map
+				});
+			
+			//add the marker to the Point
+			this.points()[pos].marker = marker;
+			
+			// Create an onclick event to open the large infowindow at each marker.
+			marker.addListener('click', function() {
+				this.setIcon(iconBigSelected);
+				self.populateInfoWindow(this, self.largeInfowindow);
+			});
+
+			marker.addListener('mouseover', function() {
+				this.setIcon(iconBig);
+			});
+
+			marker.addListener('mouseout', function() {
+				this.setIcon(icon);
+			});			
+		}
+		
 		
 		//Filters too when the user press enter on the filter
 		this.onEnter = function(d,e){
@@ -141,7 +146,7 @@ function initView(){
 			this.marker.setIcon(iconBigSelected);
 			//Populate the infowindow
 			self.populateInfoWindow(this.marker, self.largeInfowindow);
-		}
+		};
 		
 		
 		this.resetIcons = function(){
@@ -150,7 +155,7 @@ function initView(){
 				this.points()[i].marker.setIcon(icon);
 			}			
 			
-		}
+		};
 		
 		// This function populates the infowindow when the marker is clicked. We'll only allow
 		// one infowindow which will open at the marker that is clicked, and populate based
@@ -178,13 +183,13 @@ function initView(){
 			var placeId = this.points()[marker.id].placeId;
 			
 			//If there's a place id, look for reviews
-			if(placeId != null){
+			if(placeId !== null){
 				var request = {
 					placeId: placeId
 				};
 				
 				//Using a second map because calling the service makes the map disappear
-				if(map2 == null){
+				if(map2 === null){
 					//the map
 					map2 = new google.maps.Map(document.getElementById('map2'), {
 					  center: {lat: -34.6113641, lng: -58.4721043},
@@ -220,7 +225,7 @@ function initView(){
 			}
 		}
 	};	
-	}	
+	};
 	
 	var items = [
 		{title: 'CCK', location: {lat: -34.6036589, lng: -58.369497}, placeId : 'ChIJAYdZgzI1o5URUlEv3u3nFP8'},
