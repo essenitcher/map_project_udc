@@ -129,7 +129,7 @@ function initView(){
 			marker.addListener('mouseout', function() {
 				this.setIcon(icon);
 			});			
-		}
+		};
 		
 		
 		//Filters too when the user press enter on the filter
