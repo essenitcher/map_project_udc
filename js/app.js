@@ -140,8 +140,7 @@ function initView(){
 				this.setIcon(iconBigSelected);
 				self.populateInfoWindow(this, self.largeInfowindow);
 			});
-		
-		}
+		};
 		
 		//Click on location on the list
 		this.clickLocation = function(){
