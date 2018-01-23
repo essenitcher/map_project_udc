@@ -1,182 +1,43 @@
 <!DOCTYPE html>
 <html>
-  <head>
-	<meta charset="utf-8">
-	<title>Map of Buenos Aires</title>  
-	<link rel="stylesheet" href="css/styles.css">
-	<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>	
-	
-  </head>
-  <body>
-<div id="wrapper" class="active">
-      
-      <!-- Sidebar -->
-            <!-- Sidebar -->
-      <div id="sidebar-wrapper">
-      <ul id="sidebar_menu" class="sidebar-nav">
-           <li class="sidebar-brand"><a id="menu-toggle" href="#">Menu<span id="main_icon" class="glyphicon glyphicon-align-justify"></span></a></li>
-      </ul>
-        <ul class="sidebar-nav" id="sidebar">     
-          <li><a>Link1<span class="sub_icon glyphicon glyphicon-link"></span></a></li>
-          <li><a>link2<span class="sub_icon glyphicon glyphicon-link"></span></a></li>
-        </ul>
-      </div>
-          
-      <!-- Page content -->
-      <div id="page-content-wrapper">
-        <!-- Keep all page content within the page-content inset div! -->
-        <div class="page-content inset">
-          <div class="row">
-              <div id="map"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-    </div>
-      
-    <script>
-      var map;
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>Map of Buenos Aires</title>  
+		<link rel="stylesheet" href="css/styles.css">
+		<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet"/>
+		
+	</head>
+	<body>
+		<div id="wrapper" class="active">
 
-      // Create a new blank array for all the listing markers.
-      var markers = [];
+			<!-- Sidebar -->
+			<div id="sidebar-wrapper">
+				<ul id="sidebar-menu" class="sidebar-nav">
+					<li class="sidebar-brand"><a id="menu-toggle" href="#">Buenos Aires<span id="main-icon" class="glyphicon glyphicon-align-justify"></span></a></li>
+				</ul>
+				<input class="filter-input" data-bind="textInput: filterText"/>
+				<ul class="sidebar-nav" id="sidebar" data-bind="foreach: filteredPoints">     
+					<li><a data-bind="text: title, click: $parent.clickLocation"></a></li>
+				</ul>
+			</div>
 
-      function initMap() {
- 
-        // Constructor creates a new map - only center and zoom are required.
-        map = new google.maps.Map(document.getElementById('map'), {
-          center: {lat: -34.6113641, lng: -58.4721043},
-          zoom: 11,
-          mapTypeControl: false
-        });
-
-        // These are the real estate listings that will be shown to the user.
-        // Normally we'd have these in a database instead.
-        var locations = [
-          {title: 'Casa de Mauro', location: {lat: -34.520204, lng: -58.486014}},
-          {title: 'Casa de Cesar y Luis', location: {lat: -34.525064, lng: -58.485940}},
-          {title: 'Estación VTe lopez', location: {lat: -34.524057, lng: -58.473375}}
-        ];
-
-        var largeInfowindow = new google.maps.InfoWindow();
-
-        // Style the markers a bit. This will be our listing marker icon.
-        var defaultIcon = makeMarkerIcon('0091ff');
-
-        // Create a "highlighted location" marker color for when the user
-        // mouses over the marker.
-        var highlightedIcon = makeMarkerIcon('FFFF24');
-
-        // The following group uses the location array to create an array of markers on initialize.
-        for (var i = 0; i < locations.length; i++) {
-          // Get the position from the location array.
-          var position = locations[i].location;
-          var title = locations[i].title;
-          // Create a marker per location, and put into markers array.
-          var marker = new google.maps.Marker({
-            position: position,
-            title: title,
-            animation: google.maps.Animation.DROP,
-            icon: defaultIcon,
-            id: i
-          });
-          // Push the marker to our array of markers.
-          markers.push(marker);
-          // Create an onclick event to open the large infowindow at each marker.
-          marker.addListener('click', function() {
-            populateInfoWindow(this, largeInfowindow);
-          });
-          // Two event listeners - one for mouseover, one for mouseout,
-          // to change the colors back and forth.
-          marker.addListener('mouseover', function() {
-            this.setIcon(highlightedIcon);
-          });
-          marker.addListener('mouseout', function() {
-            this.setIcon(defaultIcon);
-          });
-        }
-      }
-
-      // This function populates the infowindow when the marker is clicked. We'll only allow
-      // one infowindow which will open at the marker that is clicked, and populate based
-      // on that markers position.
-      function populateInfoWindow(marker, infowindow) {
-        // Check to make sure the infowindow is not already opened on this marker.
-        if (infowindow.marker != marker) {
-          // Clear the infowindow content to give the streetview time to load.
-          infowindow.setContent('');
-          infowindow.marker = marker;
-          // Make sure the marker property is cleared if the infowindow is closed.
-          infowindow.addListener('closeclick', function() {
-            infowindow.marker = null;
-          });
-          var streetViewService = new google.maps.StreetViewService();
-          var radius = 50;
-          // In case the status is OK, which means the pano was found, compute the
-          // position of the streetview image, then calculate the heading, then get a
-          // panorama from that and set the options
-          function getStreetView(data, status) {
-            if (status == google.maps.StreetViewStatus.OK) {
-              var nearStreetViewLocation = data.location.latLng;
-              var heading = google.maps.geometry.spherical.computeHeading(
-                nearStreetViewLocation, marker.position);
-                infowindow.setContent('<div>' + marker.title + '</div><div id="pano"></div>');
-                var panoramaOptions = {
-                  position: nearStreetViewLocation,
-                  pov: {
-                    heading: heading,
-                    pitch: 30
-                  }
-                };
-              var panorama = new google.maps.StreetViewPanorama(
-                document.getElementById('pano'), panoramaOptions);
-            } else {
-              infowindow.setContent('<div>' + marker.title + '</div>' +
-                '<div>No Street View Found</div>');
-            }
-          }
-          // Use streetview service to get the closest streetview image within
-          // 50 meters of the markers position
-          streetViewService.getPanoramaByLocation(marker.position, radius, getStreetView);
-          // Open the infowindow on the correct marker.
-          infowindow.open(map, marker);
-        }
-      }
-
-      // This function will loop through the markers array and display them all.
-      function showListings() {
-        var bounds = new google.maps.LatLngBounds();
-        // Extend the boundaries of the map for each marker and display the marker
-        for (var i = 0; i < markers.length; i++) {
-          markers[i].setMap(map);
-          bounds.extend(markers[i].position);
-        }
-        map.fitBounds(bounds);
-      }
-
-      // This function takes in a COLOR, and then creates a new marker
-      // icon of that color. The icon will be 21 px wide by 34 high, have an origin
-      // of 0, 0 and be anchored at 10, 34).
-      function makeMarkerIcon(markerColor) {
-        var markerImage = new google.maps.MarkerImage(
-          'http://chart.googleapis.com/chart?chst=d_map_spin&chld=1.15|0|'+ markerColor +
-          '|40|_|%E2%80%A2',
-          new google.maps.Size(21, 34),
-          new google.maps.Point(0, 0),
-          new google.maps.Point(10, 34),
-          new google.maps.Size(21,34));
-        return markerImage;
-      }
-    </script>
-
-
-    <script async defer
-        src=
-        "https://maps.googleapis.com/maps/api/js?key=AIzaSyALg-kgAARx96p3ibol2UhIpAGxDZKC900&libraries=drawing,geometry&v=3&callback=initMap">
-    </script>
-	<script src="js/knockout.js"></script>
-	<script src="js/app.js"></script>
-	<script src="js/sideBar.js"></script>
-  </body>
+			<!-- Page content -->
+			<div id="page-content-wrapper">
+			<!-- Keep all page content within the page-content inset div -->
+				<div class="page-content inset">
+					<div class="row">
+						<div id="map"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>	
+		<script src="js/knockout.js"></script>
+		<script src="js/app.js"></script>
+		<script src="js/sideBar.js"></script>
+		<script async defer onerror="errorOnMap()"
+			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyALg-kgAARx96p3ibol2UhIpAGxDZKC900&libraries=geometry&v=3&callback=initView">
+		</script>		
+	</body>
 </html>
